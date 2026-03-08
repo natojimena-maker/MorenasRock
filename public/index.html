@@ -32,7 +32,7 @@ button:disabled{background:#555;cursor:not-allowed;}
 let productos = [], carrito = [];
 
 async function listarProductos(){
-    const res = await fetch("http://localhost:7000/productos");
+    const res = await fetch("/productos"); // RUTA RELATIVA
     productos = await res.json();
     const list = document.getElementById("productosList");
     list.innerHTML = "";
@@ -74,7 +74,7 @@ async function agregarCarrito(id){
 
     if(cantidad>producto.stock) cantidad = producto.stock;
 
-    const res = await fetch(`http://localhost:7000/comprar/${id}`,{
+    const res = await fetch(`/comprar/${id}`,{
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body: JSON.stringify({cantidad})
@@ -95,12 +95,11 @@ async function agregarCarrito(id){
     mostrarCarrito();
 }
 
-// --- PAGO ---
 async function pagar(){
     const total = parseFloat(document.getElementById("total").innerText);
     if(total<=0){ alert("Carrito vacío"); return; }
 
-    // Opción 1: WhatsApp
+    // Opción WhatsApp
     let mensaje = "Hola! Quiero comprar:\n";
     carrito.forEach(item=>{
         mensaje += `${item.nombre} x ${item.cantidad} = $${(item.precio*item.cantidad).toFixed(2)}\n`;
@@ -112,8 +111,8 @@ async function pagar(){
         return;
     }
 
-    // Opción 2: Tarjeta (Stripe)
-    const res = await fetch("http://localhost:7000/pago",{
+    // Opción Stripe
+    const res = await fetch("/pago",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body: JSON.stringify({monto:total, descripcion:"Compra MorenasRock"})
@@ -121,11 +120,10 @@ async function pagar(){
     const data = await res.json();
     if(data.error){ alert(data.error); return; }
 
-    const stripe = Stripe("TU_PUBLIC_KEY_DE_STRIPE"); // tu clave pública
+    const stripe = Stripe("TU_PUBLIC_KEY_DE_STRIPE");
     const { error } = await stripe.confirmCardPayment(data.clientSecret, {
         payment_method: {
             card: {
-                // Stripe Elements o método simplificado
                 number: prompt("Número de tarjeta"),
                 exp_month: prompt("Mes MM"),
                 exp_year: prompt("Año YYYY"),
@@ -138,7 +136,6 @@ async function pagar(){
     else { alert("Pago exitoso!"); carrito=[]; mostrarCarrito(); listarProductos(); }
 }
 
-// Inicializar
 listarProductos();
 </script>
 

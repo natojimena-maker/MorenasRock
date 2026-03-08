@@ -4,7 +4,7 @@ async function login(){
     const user = document.getElementById("adminUser").value;
     const pass = document.getElementById("adminPass").value;
 
-    const res = await fetch("http://localhost:7000/login",{
+    const res = await fetch("/login",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body: JSON.stringify({ username:user, password:pass })
@@ -32,7 +32,7 @@ document.getElementById("formAgregar").addEventListener("submit", async e=>{
     formData.append("stock", document.getElementById("stock").value);
     formData.append("imagen", document.getElementById("imagen").files[0]);
 
-    const res = await fetch("http://localhost:7000/productos",{
+    const res = await fetch("/productos",{
         method:"POST",
         headers:{ "Authorization": "Bearer "+token },
         body: formData
@@ -48,7 +48,7 @@ document.getElementById("formAgregar").addEventListener("submit", async e=>{
 
 // Listar productos
 async function listarProductos(){
-    const res = await fetch("http://localhost:7000/productos");
+    const res = await fetch("/productos");
     const productos = await res.json();
     const container = document.getElementById("productosContainer");
     container.innerHTML = "";
@@ -82,7 +82,7 @@ async function editarProducto(id){
     const tallaXL = document.getElementById(`tallaXL-${id}`).value;
     const stock = document.getElementById(`stock-${id}`).value;
 
-    const res = await fetch(`http://localhost:7000/productos/${id}`,{
+    const res = await fetch(`/productos/${id}`,{
         method:"PUT",
         headers:{
             "Content-Type":"application/json",
@@ -102,7 +102,7 @@ async function editarProducto(id){
 // Eliminar producto
 async function eliminarProducto(id){
     if(!confirm("¿Seguro quieres eliminar este producto?")) return;
-    const res = await fetch(`http://localhost:7000/productos/${id}`,{
+    const res = await fetch(`/productos/${id}`,{
         method:"DELETE",
         headers:{ "Authorization":"Bearer "+token }
     });
