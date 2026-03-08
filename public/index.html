@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>MorenasRock Tienda 🖤</title>
+<style>
+body{background:#000;color:#fff;font-family:sans-serif;text-align:center;margin:0;padding:20px;}
+.producto{border:1px solid #fff;padding:10px;margin:10px;display:inline-block;width:150px;}
+img{width:120px;height:auto;}
+input{width:40px;}
+button{background:#ff0000;color:#fff;border:none;padding:5px;margin-top:5px;cursor:pointer;}
+button:disabled{background:#555;cursor:not-allowed;}
+#carrito{margin-top:20px;text-align:left;display:inline-block;}
+#pagarBtn{margin-top:10px;padding:8px 15px;}
+</style>
+</head>
+<body>
+
+<h1>MorenasRock 🖤</h1>
+
+<div id="productosList"></div>
+
+<h2>Carrito</h2>
+<div id="carrito">
+  <ul id="carritoItems"></ul>
+  <strong>Total: $<span id="total">0</span></strong><br>
+  <button id="pagarBtn" onclick="pagar()" disabled>Pagar</button>
+</div>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+let productos = [], carrito = [];
+
+async function listarProductos(){
+    const res = await fetch("http://localhost:7000/productos");
+    productos = await res.json();
+    const list = document.getElementById("productosList");
+    list.innerHTML = "";
+
+    productos.forEach(p=>{
+        p.stock = parseInt(p.stock) || 0;
+        const disabled = p.stock===0 ? "disabled" : "";
+        const div = document.createElement("div");
+        div.className = "producto";
+        div.innerHTML = `
+            <img src="${p.imagen}" alt="${p.nombre}">
+            <p>${p.nombre}</p>
+            <p>Precio: $${p.precio}</p>
+            <p>Stock: <span id="stock-${p.id}">${p.stock}</span></p>
+            <input type="number" id="cantidad-${p.id}" value="1" min="1" max="${p.stock}" ${disabled}>
+            <br>
+            <button id="btn-${p.id}" onclick="agregarCarrito(${p.id})" ${disabled}>Agregar al carrito</button>
+        `;
+        list.appendChild(div);
+    });
+}
+
+function mostrarCarrito(){
+    const ul = document.getElementById("carritoItems");
+    ul.innerHTML = "";
+    let total = 0;
+    carrito.forEach(item=>{
+        ul.innerHTML += `<li>${item.nombre} x ${item.cantidad} = $${(item.precio*item.cantidad).toFixed(2)}</li>`;
+        total += item.precio*item.cantidad;
+    });
+    document.getElementById("total").innerText = total.toFixed(2);
+    document.getElementById("pagarBtn").disabled = carrito.length===0;
+}
+
+async function agregarCarrito(id){
+    const cantidadInput = document.getElementById(`cantidad-${id}`);
+    let cantidad = parseInt(cantidadInput.value) || 1;
+    const producto = productos.find(p=>p.id===id);
+
+    if(cantidad>producto.stock) cantidad = producto.stock;
+
+    const res = await fetch(`http://localhost:7000/comprar/${id}`,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({cantidad})
+    });
+    const data = await res.json();
+    if(data.error){ alert(data.error); return; }
+
+    producto.stock = data.nuevoStock;
+    document.getElementById(`stock-${id}`).innerText = data.nuevoStock;
+    cantidadInput.max = data.nuevoStock;
+    cantidadInput.disabled = data.nuevoStock===0;
+    document.getElementById(`btn-${id}`).disabled = data.nuevoStock===0;
+
+    const index = carrito.findIndex(c=>c.id===id);
+    if(index>=0) carrito[index].cantidad += cantidad;
+    else carrito.push({id, nombre:producto.nombre, precio:producto.precio, cantidad});
+
+    mostrarCarrito();
+}
+
+// --- PAGO ---
+async function pagar(){
+    const total = parseFloat(document.getElementById("total").innerText);
+    if(total<=0){ alert("Carrito vacío"); return; }
+
+    // Opción 1: WhatsApp
+    let mensaje = "Hola! Quiero comprar:\n";
+    carrito.forEach(item=>{
+        mensaje += `${item.nombre} x ${item.cantidad} = $${(item.precio*item.cantidad).toFixed(2)}\n`;
+    });
+    mensaje += `Total: $${total.toFixed(2)}`;
+    const urlWhats = `https://wa.me/593962634348?text=${encodeURIComponent(mensaje)}`;
+    if(confirm("Pagar por WhatsApp? OK=WhatsApp, Cancel=Tarjeta")) {
+        window.open(urlWhats,"_blank");
+        return;
+    }
+
+    // Opción 2: Tarjeta (Stripe)
+    const res = await fetch("http://localhost:7000/pago",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({monto:total, descripcion:"Compra MorenasRock"})
+    });
+    const data = await res.json();
+    if(data.error){ alert(data.error); return; }
+
+    const stripe = Stripe("TU_PUBLIC_KEY_DE_STRIPE"); // tu clave pública
+    const { error } = await stripe.confirmCardPayment(data.clientSecret, {
+        payment_method: {
+            card: {
+                // Stripe Elements o método simplificado
+                number: prompt("Número de tarjeta"),
+                exp_month: prompt("Mes MM"),
+                exp_year: prompt("Año YYYY"),
+                cvc: prompt("CVC")
+            }
+        }
+    });
+
+    if(error){ alert("Pago fallido: "+error.message); }
+    else { alert("Pago exitoso!"); carrito=[]; mostrarCarrito(); listarProductos(); }
+}
+
+// Inicializar
+listarProductos();
+</script>
+
+</body>
+</html>

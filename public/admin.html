@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>MorenasRock 🖤</title>
+<style>
+body { background:#000; color:#fff; font-family:"Gothic A1", sans-serif; margin:0; padding:20px; }
+h1 { text-align:center; margin-bottom:20px; }
+form input, form button { margin:5px; padding:5px; border-radius:5px; }
+button { background:#ff0000; color:#fff; border:none; cursor:pointer; }
+#productosContainer { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:10px; }
+.producto { border:1px solid #fff; padding:10px; width:180px; text-align:center; }
+.producto img { width:100%; height:auto; }
+input[type=number]{width:40px;}
+</style>
+</head>
+<body>
+
+<h1> MorenasRock 🖤</h1>
+
+<div>
+    <input type="text" id="adminUser" placeholder="Usuario">
+    <input type="password" id="adminPass" placeholder="Contraseña">
+    <button onclick="login()">Login</button>
+</div>
+
+<div id="adminPanel" style="display:none;">
+    <h2>Agregar Producto</h2>
+    <form id="formAgregar" enctype="multipart/form-data">
+        <input type="text" id="nombre" placeholder="Nombre" required>
+        <input type="number" id="precio" placeholder="Precio" required>
+        <input type="number" id="tallaS" placeholder="S" value="0">
+        <input type="number" id="tallaM" placeholder="M" value="0">
+        <input type="number" id="tallaL" placeholder="L" value="0">
+        <input type="number" id="tallaXL" placeholder="XL" value="0">
+        <input type="number" id="stock" placeholder="Stock" value="0" required>
+        <input type="file" id="imagen" required>
+        <button type="submit">Agregar</button>
+    </form>
+
+    <h2>Productos</h2>
+    <div id="productosContainer"></div>
+</div>
+
+<script src="admin.js"></script>
+</body>
+</html>

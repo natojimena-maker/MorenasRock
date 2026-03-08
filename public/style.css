@@ -1,0 +1,38 @@
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+    gap:20px;
+    padding:20px;
+}
+
+/* TARJETAS DE PRODUCTO */
+
+.card{
+    background:#1a1a1a;
+    padding:15px;
+    border-radius:10px;
+    transition:0.3s;
+
+    height:420px;           /* mismo tamaño para todos */
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    align-items:center;     /* centra contenido */
+    text-align:center;
+}
+
+/* IMAGENES MISMO TAMAÑO */
+
+.card img{
+    width:180px;
+    height:180px;
+    object-fit:cover;       /* evita deformación */
+    border-radius:5px;
+}
+
+/* EFECTO HOVER */
+
+.card:hover{
+    transform:scale(1.05);
+    border:1px solid red;
+}
